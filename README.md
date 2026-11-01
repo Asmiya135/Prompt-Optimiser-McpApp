@@ -14,12 +14,6 @@ Built for Gemini Enterprise first, designed for any LLM. Python 3.10, deploys to
 4. [Early results](#4-early-results)
 5. [Architecture](#5-architecture)
 6. [Project layout](#6-project-layout)
-7. [Run it locally](#7-run-it-locally)
-8. [The demo: tokens with and without the tool](#8-the-demo-tokens-with-and-without-the-tool)
-9. [Deploy to Google Cloud](#9-deploy-to-google-cloud)
-10. [Cost](#10-cost)
-11. [Verify these before the demo](#11-verify-these-before-the-demo)
-12. [Extending to other LLMs](#12-extending-to-other-llms)
 
 ---
 
