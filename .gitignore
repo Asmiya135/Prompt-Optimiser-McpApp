@@ -1,0 +1,10 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+bench/results/
+tests/host/node_modules/
+tests/host/hostkit.js
+.pytest_cache/
+read.txt

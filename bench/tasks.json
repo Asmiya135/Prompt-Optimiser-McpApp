@@ -1,0 +1,102 @@
+{
+  "about": "Each task has a realistic vague first prompt (raw_prompt), the answers the user would give in the intake form (intake), and the user's real acceptance criteria (acceptance, an output-contract string). Both runs are judged by the same acceptance criteria and get the same follow-up messages. The criteria are mechanical (length, format, item count, required words), so they cannot judge quality or truth; review a sample of answers by hand too.",
+  "tasks": [
+    {
+      "id": "blog",
+      "label": "Blog post",
+      "raw_prompt": "write a blog post about climate change",
+      "intake": {
+        "output_type": "written_piece",
+        "inputs": ["nothing"],
+        "audience": "general readers",
+        "length": "400 words",
+        "tone": "friendly",
+        "scope": "how rising seas affect coastal cities",
+        "must_include": "Mumbai, Jakarta, Miami"
+      },
+      "acceptance": "po1;words=320-480;inc=Mumbai|Jakarta|Miami",
+      "followups": {"Must include": "Focus on coastal cities and use Mumbai, Jakarta and Miami as the examples."}
+    },
+    {
+      "id": "explain",
+      "label": "Explanation",
+      "raw_prompt": "explain photosynthesis",
+      "intake": {
+        "output_type": "explanation",
+        "inputs": ["nothing"],
+        "audience": "a class 9 student",
+        "length": "under 120 words",
+        "tone": "simple",
+        "must_include": "chlorophyll, carbon dioxide, oxygen"
+      },
+      "acceptance": "po1;words=-120;inc=chlorophyll|carbon dioxide|oxygen"
+    },
+    {
+      "id": "compare",
+      "label": "Comparison table",
+      "raw_prompt": "python vs java",
+      "intake": {
+        "output_type": "comparison_table",
+        "inputs": ["nothing"],
+        "length": "at most 6 rows",
+        "must_include": "typing, speed, syntax",
+        "notes": "For a first-year student choosing a first programming language."
+      },
+      "acceptance": "po1;fmt=table;items=<6;words=-220;inc=typing|speed|syntax"
+    },
+    {
+      "id": "code",
+      "label": "Code",
+      "raw_prompt": "write a function to check palindrome",
+      "intake": {
+        "output_type": "code",
+        "inputs": ["nothing"],
+        "notes": "Python 3. Ignore case and spaces.",
+        "length": "code only, plus at most 3 lines of explanation"
+      },
+      "acceptance": "po1;fmt=code;words=-60;inc=def |lower",
+      "followups": {
+        "Must include": "Write it in Python and make it ignore case and spaces.",
+        "Length (max)": "Just the code and at most 3 lines of explanation."
+      }
+    },
+    {
+      "id": "ideas",
+      "label": "App names",
+      "raw_prompt": "give me some names for my app",
+      "intake": {
+        "output_type": "ideas_list",
+        "inputs": ["nothing"],
+        "length": "5 names",
+        "tone": "catchy",
+        "notes": "A fitness app for college students that turns workouts into team challenges."
+      },
+      "acceptance": "po1;fmt=numbered;items=5;words=-120"
+    },
+    {
+      "id": "summary",
+      "label": "Summary",
+      "raw_prompt": "summarize this:\n\n{material}",
+      "intake": {
+        "output_type": "summary",
+        "inputs": ["text"],
+        "material": "{material}",
+        "audience": "students who missed the meeting",
+        "length": "3 bullet points"
+      },
+      "acceptance": "po1;fmt=bullets;items=3;words=-80",
+      "material": "Minutes of the tech fest committee meeting (fictional example). The committee agreed to move the hackathon from Friday to Saturday because the main hall is booked for exams on Friday. Registration will close on the 10th instead of the 15th, so that teams can be assigned mentors a week before the event. Each team may have at most four members. The sponsorship team reported that two of the three sponsors have confirmed; the third will reply next week. Volunteers are still needed for the registration desk and for the closing ceremony; anyone interested should message the volunteer lead by Wednesday. The next meeting is on Monday at 5 pm in room 204."
+    },
+    {
+      "id": "fact",
+      "label": "Simple fact",
+      "raw_prompt": "What is the capital of Australia?",
+      "intake": {
+        "output_type": "explanation",
+        "inputs": ["nothing"],
+        "length": "one sentence"
+      },
+      "acceptance": "po1;words=-40;inc=Canberra"
+    }
+  ]
+}

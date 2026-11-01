@@ -1,0 +1,5 @@
+# Server runtime (Python 3.10+). Versions are the ones this project was tested with.
+mcp==2.3.0
+google-genai==2.33.0   # last release supporting Python 3.10; only used if GEMINI_API_KEY is set
+httpx==0.28.1
+uvicorn==0.54.0

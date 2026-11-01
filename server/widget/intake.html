@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt intake</title>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f6f7f9; --text: #1b1f24; --muted: #5b6573; --line: #d9dee5;
+    --accent: #1a73e8; --accent-text: #ffffff; --chip: #eef1f5; --chip-on: #dbe8fd; --warn: #fff4e5;
+    --warn-line: #f5b25b; --ok: #1e7f4f; --radius: 10px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181c; --panel: #1e2126; --text: #e8eaed; --muted: #9aa3ae; --line: #343a42;
+      --accent: #8ab4f8; --accent-text: #0b1b33; --chip: #262a30; --chip-on: #233a5c; --warn: #3a2c16;
+      --warn-line: #b7853f; --ok: #6fcf97;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181c; --panel: #1e2126; --text: #e8eaed; --muted: #9aa3ae; --line: #343a42;
+    --accent: #8ab4f8; --accent-text: #0b1b33; --chip: #262a30; --chip-on: #233a5c; --warn: #3a2c16;
+    --warn-line: #b7853f; --ok: #6fcf97;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  main { padding: 16px; display: grid; gap: 14px; max-width: 760px; }
+  h1 { font-size: 15px; margin: 0; }
+  .sub { color: var(--muted); margin: 2px 0 0; font-size: 13px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: grid; gap: 8px; }
+  .q { font-weight: 600; }
+  .hint { color: var(--muted); font-size: 12px; }
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--bg);
+    color: var(--text); font: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: var(--chip); color: var(--text); border-radius: 999px;
+    padding: 5px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .chip[aria-pressed="true"] { background: var(--chip-on); border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: center; }
+  .hidden { display: none !important; }
+  .banner { background: var(--warn); border: 1px solid var(--warn-line); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .banner button { margin: 6px 6px 0 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button.primary { background: var(--accent); color: var(--accent-text); border: 0; border-radius: 8px; padding: 9px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: default; }
+  .stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+  .stats b { font-size: 16px; }
+  ul { margin: 0; padding-left: 18px; }
+  .status { font-size: 13px; color: var(--muted); }
+  .status.ok { color: var(--ok); }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <h1>Optimize your prompt</h1>
+    <p class="sub">Three quick questions so the answer fits on the first try. Prefilled from your message; change anything.</p>
+  </div>
+
+  <div id="notices" class="hidden"></div>
+
+  <section>
+    <label class="q" for="draft">Your prompt</label>
+    <textarea id="draft" rows="3" placeholder="What would you have typed?"></textarea>
+  </section>
+
+  <section>
+    <label class="q" for="outputType">1. What output do you expect?</label>
+    <select id="outputType"></select>
+    <input id="outputOther" type="text" class="hidden" placeholder="Describe the output you want">
+    <div id="conflict" class="banner hidden"></div>
+  </section>
+
+  <section>
+    <span class="q">2. What input do you have?</span>
+    <div id="inputs" class="chips" role="group" aria-label="Inputs you have"></div>
+    <input id="inputOther" type="text" class="hidden" placeholder="Describe the other input">
+    <div id="materialBox" class="hidden">
+      <label class="hint" for="material">Paste the text, code, data or examples to use (optional, but answers are better with it):</label>
+      <textarea id="material" rows="4"></textarea>
+    </div>
+  </section>
+
+  <section>
+    <span class="q">3. How much can you tell us? Any constraints?</span>
+    <div id="constraintChips" class="chips" role="group" aria-label="Constraints"></div>
+    <div id="constraintFields" style="display:grid;gap:6px"></div>
+    <label class="hint" for="notes">Anything else the model should know (background, purpose)?</label>
+    <textarea id="notes" rows="2"></textarea>
+  </section>
+
+  <div class="actions">
+    <button id="build" class="primary">Build optimized prompt</button>
+    <span id="buildStatus" class="status"></span>
+  </div>
+
+  <section id="result" class="hidden" aria-live="polite">
+    <span class="q">Optimized prompt</span>
+    <div class="stats">
+      <span>Your draft: <b id="tBefore">0</b> tokens</span>
+      <span>Optimized: <b id="tAfter">0</b> tokens</span>
+      <span class="hint" id="tMethod"></span>
+    </div>
+    <div class="hint">Savings come from fewer follow-up turns, not a shorter first message.</div>
+    <div id="techniques" class="chips"></div>
+    <textarea id="prompt" rows="10"></textarea>
+    <div id="assumptions" class="hint"></div>
+    <div id="warnings"></div>
+    <div class="actions">
+      <button id="send" class="primary">Send to chat</button>
+      <button id="copy" class="secondary">Copy</button>
+      <span id="sendStatus" class="status"></span>
+    </div>
+  </section>
+</main>
+
+<script>/*__EXT_APPS_BUNDLE__*/</script>
+<script>
+(function () {
+  "use strict";
+  var OPTIONS = /*__OPTIONS__*/null || { output_types: {}, input_types: {} };
+  var MATERIAL_INPUTS = ["text", "code", "data", "examples", "links"];
+  var CONSTRAINTS = [
+    { key: "length", label: "Length limit", ph: "e.g. 300 words, under 100 words, 5 bullet points" },
+    { key: "tone", label: "Tone", ph: "e.g. friendly, formal, persuasive" },
+    { key: "audience", label: "Audience", ph: "e.g. class 9 student, investors" },
+    { key: "must_include", label: "Must include", ph: "comma-separated" },
+    { key: "avoid", label: "Avoid", ph: "comma-separated" },
+    { key: "scope", label: "Deadline or scope", ph: "e.g. focus on coastal cities" }
+  ];
+  var state = { inputs: [], constraints: {}, noConstraints: false, prefillType: "", targetModel: "gemini" };
+  var $ = function (id) { return document.getElementById(id); };
+  var app = null;
+
+  function el(tag, attrs, text) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  // ---------- build the form
+  var sel = $("outputType");
+  sel.appendChild(el("option", { value: "" }, "Choose..."));
+  Object.keys(OPTIONS.output_types).forEach(function (k) {
+    sel.appendChild(el("option", { value: k }, OPTIONS.output_types[k]));
+  });
+  sel.addEventListener("change", function () { $("outputOther").classList.toggle("hidden", sel.value !== "other"); showConflict(); });
+
+  Object.keys(OPTIONS.input_types).forEach(function (k) {
+    var b = el("button", { type: "button", class: "chip", "aria-pressed": "false", "data-key": k }, OPTIONS.input_types[k]);
+    b.addEventListener("click", function () { toggleInput(k); });
+    $("inputs").appendChild(b);
+  });
+
+  CONSTRAINTS.forEach(function (c) {
+    var b = el("button", { type: "button", class: "chip", "aria-pressed": "false", "data-key": c.key }, c.label);
+    b.addEventListener("click", function () { toggleConstraint(c.key, !(c.key in state.constraints)); });
+    $("constraintChips").appendChild(b);
+    var row = el("div", { class: "row hidden", id: "row-" + c.key });
+    row.appendChild(el("label", { for: "c-" + c.key, class: "hint" }, c.label));
+    row.appendChild(el("input", { type: "text", id: "c-" + c.key, placeholder: c.ph }));
+    $("constraintFields").appendChild(row);
+  });
+  var none = el("button", { type: "button", class: "chip", "aria-pressed": "false", id: "noConstraints" }, "No constraints");
+  none.addEventListener("click", function () { setNoConstraints(!state.noConstraints); });
+  $("constraintChips").appendChild(none);
+
+  function toggleInput(k, on) {
+    var i = state.inputs.indexOf(k);
+    var want = on === undefined ? i < 0 : on;
+    if (want && i < 0) state.inputs.push(k);
+    if (!want && i >= 0) state.inputs.splice(i, 1);
+    if (k === "nothing" && want) state.inputs = ["nothing"];
+    if (k !== "nothing" && want) state.inputs = state.inputs.filter(function (x) { return x !== "nothing"; });
+    document.querySelectorAll("#inputs .chip").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(state.inputs.indexOf(b.dataset.key) >= 0));
+    });
+    $("inputOther").classList.toggle("hidden", state.inputs.indexOf("other") < 0);
+    $("materialBox").classList.toggle("hidden", !state.inputs.some(function (x) { return MATERIAL_INPUTS.indexOf(x) >= 0; }));
+  }
+
+  function toggleConstraint(key, on, value) {
+    if (on) { state.constraints[key] = true; setNoConstraints(false); } else { delete state.constraints[key]; }
+    $("row-" + key).classList.toggle("hidden", !on);
+    document.querySelector('#constraintChips .chip[data-key="' + key + '"]').setAttribute("aria-pressed", String(!!on));
+    if (value) $("c-" + key).value = value;
+  }
+
+  function setNoConstraints(on) {
+    state.noConstraints = on;
+    $("noConstraints").setAttribute("aria-pressed", String(on));
+    if (on) CONSTRAINTS.forEach(function (c) { toggleConstraint(c.key, false); });
+  }
+
+  function showConflict() {
+    var box = $("conflict");
+    box.textContent = "";
+    var picked = sel.value, guess = state.prefillType;
+    if (!picked || !guess || picked === guess || picked === "other") { box.classList.add("hidden"); return; }
+    box.appendChild(document.createTextNode(
+      "Your prompt sounds like “" + OPTIONS.output_types[guess] + "” but you picked “" +
+      OPTIONS.output_types[picked] + "”. Which is right?"));
+    var br = el("div");
+    var useGuess = el("button", { type: "button", class: "secondary" }, "Use " + OPTIONS.output_types[guess]);
+    useGuess.addEventListener("click", function () { sel.value = guess; showConflict(); });
+    var keep = el("button", { type: "button", class: "secondary" }, "Keep " + OPTIONS.output_types[picked]);
+    keep.addEventListener("click", function () { state.prefillType = picked; showConflict(); });
+    br.appendChild(useGuess); br.appendChild(keep); box.appendChild(br);
+    box.classList.remove("hidden");
+  }
+
+  function showNotices(data) {
+    var box = $("notices");
+    box.textContent = "";
+    var groups = [
+      ["Please answer:", data.questions || []],
+      ["If you don't say otherwise, we'll assume:", data.assumptions || []]
+    ];
+    if (data.ready) groups.unshift(["Your prompt already covers the essentials. You can send it as it is.", []]);
+    var any = false;
+    groups.forEach(function (g) {
+      if (!g[1].length && g[0].indexOf("already") < 0) return;
+      any = true;
+      box.appendChild(el("div", {}, g[0]));
+      if (g[1].length) {
+        var ul = el("ul");
+        g[1].forEach(function (t) { ul.appendChild(el("li", {}, t)); });
+        box.appendChild(ul);
+      }
+    });
+    box.className = any ? "banner" : "hidden";
+  }
+
+  // ---------- data in from the host
+  function applyPrefill(data) {
+    if (!data) return;
+    if (data.draft && !$("draft").value) $("draft").value = data.draft;
+    var p = data.prefill || {};
+    state.prefillType = p.output_type || "";
+    if (p.output_type && !sel.value) { sel.value = p.output_type; }
+    (p.inputs || []).forEach(function (k) { toggleInput(k, true); });
+    ["length", "tone", "audience"].forEach(function (k) { if (p[k]) toggleConstraint(k, true, p[k]); });
+    if (data.target_model) state.targetModel = data.target_model;
+    showNotices(data);
+    showConflict();
+  }
+
+  function collect() {
+    var args = {
+      draft: $("draft").value.trim(),
+      output_type: sel.value,
+      output_other: $("outputOther").value.trim(),
+      inputs: state.inputs.slice(),
+      input_other: $("inputOther").value.trim(),
+      material: $("material").value,
+      notes: $("notes").value.trim(),
+      no_constraints: state.noConstraints,
+      target_model: state.targetModel
+    };
+    CONSTRAINTS.forEach(function (c) { args[c.key] = (c.key in state.constraints) ? $("c-" + c.key).value.trim() : ""; });
+    return args;
+  }
+
+  function showResult(r) {
+    $("result").classList.remove("hidden");
+    $("prompt").value = r.prompt || "";
+    $("tBefore").textContent = r.tokens_before;
+    $("tAfter").textContent = r.tokens_after;
+    $("tMethod").textContent = r.token_method || "";
+    var t = $("techniques"); t.textContent = "";
+    (r.techniques || []).forEach(function (name) {
+      var c = el("span", { class: "chip", title: (r.technique_notes || {})[name] || "" }, name);
+      t.appendChild(c);
+    });
+    $("assumptions").textContent = (r.assumptions && r.assumptions.length) ? "Assumed: " + r.assumptions.join(" ") : "";
+    var w = $("warnings"); w.textContent = "";
+    if (r.warnings && r.warnings.length) {
+      var b = el("div", { class: "banner" }); var ul = el("ul");
+      r.warnings.forEach(function (x) { ul.appendChild(el("li", {}, x)); });
+      b.appendChild(ul); w.appendChild(b);
+    }
+    $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  $("build").addEventListener("click", function () {
+    var args = collect();
+    if (!args.draft) { $("buildStatus").textContent = "Type your prompt first."; return; }
+    if (!app) { $("buildStatus").textContent = "Not connected to the chat app."; return; }
+    $("build").disabled = true; $("buildStatus").className = "status"; $("buildStatus").textContent = "Building...";
+    app.callServerTool({ name: "build_prompt", arguments: args }).then(function (res) {
+      if (res.isError) {
+        var msg = (res.content && res.content[0] && res.content[0].text) || "The server returned an error.";
+        $("buildStatus").textContent = msg; return;
+      }
+      showResult(res.structuredContent || {});
+      $("buildStatus").textContent = "";
+    }).catch(function (e) {
+      $("buildStatus").textContent = "Could not reach the server: " + (e && e.message ? e.message : e);
+    }).finally(function () { $("build").disabled = false; });
+  });
+
+  $("send").addEventListener("click", function () {
+    var text = $("prompt").value.trim();
+    if (!text || !app) return;
+    $("send").disabled = true;
+    app.sendMessage({ role: "user", content: [{ type: "text", text: text }] }).then(function (res) {
+      if (res && res.isError) throw new Error("rejected");
+      $("sendStatus").className = "status ok"; $("sendStatus").textContent = "Sent.";
+    }).catch(function () {
+      $("sendStatus").className = "status";
+      $("sendStatus").textContent = "This app can't send it for you. Copy it and paste it into the chat.";
+      $("send").disabled = false;
+    });
+  });
+
+  $("copy").addEventListener("click", function () {
+    var ta = $("prompt"), done = function () { $("sendStatus").className = "status ok"; $("sendStatus").textContent = "Copied."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(done, function () { ta.select(); $("sendStatus").textContent = "Selected; press Ctrl+C or Cmd+C."; });
+    } else { ta.select(); $("sendStatus").textContent = "Selected; press Ctrl+C or Cmd+C."; }
+  });
+
+  // ---------- connect to the host
+  if (!window.McpExtApps) { $("buildStatus").textContent = "The form failed to load."; return; }
+  app = new window.McpExtApps.App({ name: "prompt-optimizer-intake", version: "0.1.0" }, {}, { autoResize: true });
+  app.ontoolinput = function (p) { if (p && p.arguments && p.arguments.draft && !$("draft").value) $("draft").value = p.arguments.draft; };
+  app.ontoolresult = function (p) { applyPrefill(p && p.structuredContent); };
+  app.onhostcontextchanged = function (c) { if (c && c.theme) document.documentElement.setAttribute("data-theme", c.theme); };
+  app.connect().then(function () {
+    var ctx = app.getHostContext && app.getHostContext();
+    if (ctx && ctx.theme) document.documentElement.setAttribute("data-theme", ctx.theme);
+  }).catch(function () {
+    app = null;
+    $("buildStatus").textContent = "Open this form from a chat app that supports MCP Apps.";
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "widget-test-host",
+  "private": true,
+  "description": "Builds the official MCP Apps host bridge for the widget browser test.",
+  "devDependencies": {
+    "@modelcontextprotocol/ext-apps": "2.0.4",
+    "esbuild": "0.28.2"
+  }
+}
