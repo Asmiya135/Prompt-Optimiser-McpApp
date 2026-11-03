@@ -4,6 +4,10 @@
 
 Built for Gemini Enterprise first, designed for any LLM. Python 3.10, deploys to Cloud Run within the free tier. The optimizer itself makes **zero model calls**: every decision is a fixed rule, so it costs no tokens and gives the same prompt for the same answers.
 
+
+https://github.com/user-attachments/assets/b18308de-dfac-4cfd-951c-49644ef61505
+
+
 ---
 
 ## Contents
