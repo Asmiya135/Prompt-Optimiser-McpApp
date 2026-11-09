@@ -1,8 +1,10 @@
+© 2026 Asmiya Sayyad. All rights reserved. Viewing only; no copying or reuse without permission. See LICENSE.
 # Prompt Optimizer MCP
 
 **Ask first, answer once.** An MCP server that asks three quick questions before the model answers, builds the leanest prompt that covers them, and checks the answer against what was asked, so you get the right answer in one turn instead of three.
 
 Built for Gemini Enterprise first, designed for any LLM. Python 3.10, deploys to Cloud Run within the free tier. The optimizer itself makes **zero model calls**: every decision is a fixed rule, so it costs no tokens and gives the same prompt for the same answers.
+
 
 
 https://github.com/user-attachments/assets/b18308de-dfac-4cfd-951c-49644ef61505
